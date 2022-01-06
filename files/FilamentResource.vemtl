@@ -1,0 +1,144 @@
+<?php
+<# TEMPLATE VARIABLES #>
+<% let crudModelName = this.crud.model.name %>
+<% let crudPluginData = this.pluginData.cruds[this.crud.id] %>
+<% let modelsNamespace = this.projectHelper.getModelsNamespace() %>
+<####>
+
+namespace App\Filament\Resources;
+
+use <$ modelsNamespace $>\<$ crudModelName $>;
+use Filament\Resources\{
+    Form, Table, Resource
+};
+use App\Filament\Resources\<$ crudModelName $>Resource\Pages;
+<% if(this.crudHasTextInputs(this.crud)) { %>
+use Filament\Forms\Components\TextInput;
+<% } %>
+<% if(this.crud.hasSelectInputs()) { %>
+use Filament\Forms\Components\Select;
+<% } %>
+<% if(this.crud.hasDatetimeInputs()) { %>
+use Filament\Forms\Components\DateTimePicker;
+<% } %>
+<% if(this.crud.hasDateInputs()) { %>
+use Filament\Forms\Components\DatePicker;
+<% } %>
+<% if(this.crud.hasCheckboxInputs()) { %>
+use Filament\Forms\Components\Toggle;
+<% } %>
+<% if(this.crud.hasFileOrImageInputs()) { %>
+use Filament\Forms\Components\FileUpload;
+<% } %>
+<% if(this.crud.hasTextareaInputs()) { %>
+use Filament\Forms\Components\RichEditor;
+<% } %>
+<% if(this.crud.hasBelongsToInputs()) { %>
+use Filament\Forms\Components\BelongsToSelect;
+<% } %>
+use Filament\Forms\Components\Grid;
+
+class <$ crudModelName $>Resource extends Resource
+{
+    protected static ?string $model = <$ crudModelName $>::class;
+
+    protected static ?string $navigationIcon = 'heroicon-o-collection';
+
+    protected static ?string $recordTitleAttribute = '<$ this.crud.model.getLabelFieldName() $>';
+
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Grid::make(['default' => 0])->schema([
+                <% if(this.crud.inputs.length && crudPluginData.inputs) { %>
+                    <# Crud inputs #>
+                    <% for(let input of this.crud.inputs) { %>
+                        <###>
+                        <% let inputNeedsOptions = input.isSelect() && !input.isForRelationship() %>
+                        <###>
+                        <$ this.getTypeForFilament(input) $>::make('<$ input.name $>')
+                        ->rules(<$ input.convertValidationToArrayForTemplate(input.validation) $>)
+                        <###>
+                        <% if(input.isNumeric()) { %>
+                        ->numeric()
+                        <% } %>
+                        <###>
+                        <% if(input.isForRelationship()) { %>
+                        ->relationship('<$ input.relationship.name $>', '<$ input.relationship.model.getLabelFieldName() $>')
+                        <% } %>
+                        <###>
+                        <% if(input.isEmail()) { %>
+                        ->email()
+                        <% } %>
+                        <###>
+                        <% if(input.isPassword()) { %>
+                        ->password()
+                        <% } %>
+                        <###>
+                        <% if(input.isUrl()) { %>
+                        ->url()
+                        <% } %>
+                        <###>
+                        <% if(input.isImage()) { %>
+                        ->image()
+                        <% } %>
+                        <###>
+                        <% if(input.isSelect()) { %>
+                        ->searchable()
+                        <% } %>
+                        <###>
+                        <% if(inputNeedsOptions) { %>
+                        ->options([
+                            <% for(let item of input.items) { %>
+                                '<$ item.value $>' => '<$ item.label $>',
+                            <% } %>
+                        ])
+                        <% } %>
+                        <###>
+                        <% if(input.placeholder) { %>
+                        ->placeholder('<$ input.placeholder $>')
+                        <% } %>
+                        <###>
+                        <% if(input.defaultValue) { %>
+                        ->default('<$ input.defaultValue $>')
+                        <% } %>
+                        ->columnSpan([
+                            'default' => <$ input.cols $>,
+                            'md' => <$ input.colsMedium $>,
+                            'lg' => <$ input.colsLarge $>
+                        ]),
+
+                    <% } %>
+                <% } %>
+                ])
+            ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                //
+            ])
+            ->filters([
+                //
+            ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\List<$ this.crud.model.plural $>::route('/'),
+            'create' => Pages\Create<$ crudModelName $>::route('/create'),
+            'edit' => Pages\Edit<$ crudModelName $>::route('/{record}/edit'),
+        ];
+    }
+}

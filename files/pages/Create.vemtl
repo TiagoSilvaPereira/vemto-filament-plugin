@@ -1,0 +1,14 @@
+<?php
+<# TEMPLATE VARIABLES #>
+<% let crudModelName = this.crud.model.name %>
+<####>
+
+namespace App\Filament\Resources\<$ crudModelName $>Resource\Pages;
+
+use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Resources\<$ crudModelName $>Resource;
+
+class Create<$ crudModelName $> extends CreateRecord
+{
+    protected static string $resource = <$ crudModelName $>Resource::class;
+}
