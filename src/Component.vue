@@ -30,7 +30,7 @@
                     <small class="mb-1 ml-3">Relationships</small>
                     <div class="form-check my-1 ml-3" v-for="relationship in getAllRelationshipsFromModel(crud.model)" :key="'rel' + relationship.id">
                         <label class="inline-flex items-center">
-                            <input class="form-checkbox" type="checkbox" v-model="pluginData.cruds[crud.id]['relationships'][relationship.id]" @change="save">
+                            <input class="form-checkbox" type="checkbox" v-model="pluginData.cruds[crud.id]['relationships'][relationship.id].selected" @change="save">
                             <span class="ml-2 text-gray-800 dark:text-gray-300">{{ `${relationship.type.case('pascalCase')} (${relationship.name.case('pascalCase')})` }}</span>
                         </label>
                     </div>
@@ -45,12 +45,14 @@ export default {
         return {
             projectCruds: [],
             pluginData: [],
+            vemtoProject: {}
         }
     },
 
     created() {
+        this.vemtoProject = window.vemtoApi.getProject()
         this.pluginData = window.vemtoApi.getPluginData()
-        this.projectCruds = window.vemtoApi.getProject().getMainCruds()
+        this.projectCruds = this.vemtoProject.getMainCruds()
 
         if(this.pluginData.cruds) this.checkNewProjectCruds()
     },
@@ -68,30 +70,50 @@ export default {
         toggleCrudData(crud) {
             let crudData = this.pluginData.cruds[crud.id]
 
+            if(!crudData || !crudData.relationships) return
+
             this.$set(crudData, 'inputs', crudData.selected)
 
             crudData.relationships.forEach((rel, index) => {
-                this.$set(crudData.relationships, index, crudData.selected)
+                if(!rel) return
+
+                if(!crudData.relationships[index]) return
+
+                this.$set(crudData.relationships[index], 'selected', crudData.selected)
             })
 
+            this.toggleCrudModule(crud.id, crudData.selected)
             this.save()
         },
 
         selectAllData(event) {
             let isChecked = event.target.checked
 
-            this.pluginData.cruds.forEach(crudData => {
+            this.pluginData.cruds.forEach((crudData, crudId) => {
                 if(!crudData) return
 
                 crudData.selected = isChecked
                 crudData.inputs = isChecked
 
+                this.toggleCrudModule(crudId, isChecked)
+
                 crudData.relationships.forEach((rel, index) => {
-                    crudData.relationships[index] = isChecked
+                    if(!rel) return
+                    
+                    crudData.relationships[index].selected = isChecked
                 })
             })
 
             this.save()
+        },
+
+        toggleCrudModule(crudId, selected) {
+            if(selected) {
+                this.vemtoProject.purgeRemovedModule('crud-settings', crudId)
+                return
+            }
+
+            this.vemtoProject.registerRemovedModule('crud-settings', crudId)
         },
         
         checkNewProjectCruds() {
@@ -103,11 +125,12 @@ export default {
 
                 if(crudRelationships.length) {
                     crudRelationships.forEach(rel => {
-                        crudData.relationships[rel.id] = false
+                        crudData.relationships[rel.id] = {}
+                        crudData.relationships[rel.id].selected = false
                     })
                 }
 
-                this.pluginData.cruds[crud.id] = crudData
+                this.$set(this.pluginData.cruds, crud.id, crudData)
             })
 
             this.save()

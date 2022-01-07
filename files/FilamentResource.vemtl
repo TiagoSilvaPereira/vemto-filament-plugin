@@ -8,6 +8,9 @@
 namespace App\Filament\Resources;
 
 use <$ modelsNamespace $>\<$ crudModelName $>;
+use Filament\{
+    Tables, Forms
+};
 use Filament\Resources\{
     Form, Table, Resource
 };
@@ -35,6 +38,10 @@ use Filament\Forms\Components\RichEditor;
 <% } %>
 <% if(this.crud.hasBelongsToInputs()) { %>
 use Filament\Forms\Components\BelongsToSelect;
+use Filament\Tables\Filters\MultiSelectFilter;
+<% } %>
+<% if(this.crud.model.hasTimestampFields()) { %>
+use Illuminate\Database\Eloquent\Builder;
 <% } %>
 use Filament\Forms\Components\Grid;
 
@@ -96,7 +103,7 @@ class <$ crudModelName $>Resource extends Resource
                         ])
                         <% } %>
                         <###>
-                        <% if(input.placeholder) { %>
+                        <% if(input.placeholder && !input.isCheckbox()) { %>
                         ->placeholder('<$ input.placeholder $>')
                         <% } %>
                         <###>
@@ -119,10 +126,59 @@ class <$ crudModelName $>Resource extends Resource
     {
         return $table
             ->columns([
-                //
+                <% if(this.crudTableInputs.length) { %>
+                    <% for(let inputTable of this.crudTableInputs) { %>
+                        <###>
+                        <% let inputTableName = inputTable.isForRelationship() ? this.getRelationshipInputName(inputTable) : inputTable.name %>
+                        <% let inputTableNeedsLimit = inputTable.isText() || inputTable.isForRelationship() || inputTable.isEmail() %>
+                        <###>
+                        Tables\Columns\<$ this.getTableType(inputTable) $>::make('<$ inputTableName $>')
+                        <###>
+                        <% if(inputTable.isDatetime()) { %>
+                            ->dateTime()
+                        <% } %>
+                        <###>
+                        <% if(inputTable.isDate()) { %>
+                            ->date()
+                        <% } %>
+                        <###>
+                        <% if(inputTable.isImage()) { %>
+                            ->rounded()
+                        <% } %>
+                        <###>
+                        <% if(inputTableNeedsLimit) { %>
+                            ->limit(50)
+                        <% } %>,
+                    <% } %>
+                <% } %>
             ])
             ->filters([
-                //
+                <% if(this.crud.model.hasTimestampFields()) { %>
+                    <###>
+                    Tables\Filters\Filter::make('created_at')
+                        ->form([
+                            Forms\Components\DatePicker::make('created_from'),
+                            Forms\Components\DatePicker::make('created_until'),
+                        ])
+                        ->query(function (Builder $query, array $data): Builder {
+                            return $query
+                                ->when($data['created_from'], fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date))
+                                ->when($data['created_until'], fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date));
+                        }),
+
+                <% } %>
+                <% if(this.crud.hasBelongsToInputs()) { %>
+                    <###>
+                    <% for(let belongsToInput of this.crud.getBelongsToInputs()) { %>
+                        <###>
+                        <% let inputRelModel = belongsToInput.relationship.model %>
+                        <###>
+                        <% if(belongsToInput.isForRelationship()) { %>
+                        MultiSelectFilter::make('<$ belongsToInput.name $>')->relationship('<$ inputRelModel.name.case('camelCase') $>', '<$ inputRelModel.getLabelFieldName() $>'),
+                        <% } %>
+
+                    <% } %>
+                <% } %>
             ]);
     }
 
