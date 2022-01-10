@@ -54,10 +54,31 @@ export default {
         this.pluginData = window.vemtoApi.getPluginData()
         this.projectCruds = this.vemtoProject.getMainCruds()
 
-        if(this.pluginData.cruds) this.checkNewProjectCruds()
+        if(this.pluginData.cruds) {
+            this.checkNewProjectCruds()
+            this.checkNewModelRelationships()
+        }
     },
 
     methods: {
+        checkNewModelRelationships() {
+            this.projectCruds.forEach(crud => {
+                let crudPluginData = this.pluginData.cruds.find(crudData => crudData && crudData.id === crud.id)
+
+                if(!crudPluginData) return
+
+                let crudModelRelationships = this.getAllRelationshipsFromModel(crud.model)
+
+                crudModelRelationships.forEach(rel => {
+                    if(!crudPluginData.relationships[rel.id]) {
+                        this.$set(this.pluginData.cruds[crud.id].relationships, rel.id, { selected: false })
+                    }
+                })
+            })
+
+            this.save()
+        },
+
         getAllRelationshipsFromModel(model) {
             let basicRelationships = model.getAllRelationships(),
                 morphRelationships = model.getAllMorphRelationships()
@@ -120,7 +141,7 @@ export default {
             this.projectCruds.forEach(crud => {
                 if(this.pluginData.cruds[crud.id]) return
 
-                let crudData = { 'selected': false, 'inputs': false, 'relationships': [] },
+                let crudData = { 'selected': false, id: crud.id, 'inputs': false, 'relationships': [] },
                     crudRelationships = this.getAllRelationshipsFromModel(crud.model)
 
                 if(crudRelationships.length) {

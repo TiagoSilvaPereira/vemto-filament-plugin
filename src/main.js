@@ -137,17 +137,19 @@ module.exports = (vemto) => {
             vemto.log.message('Generating Filament Resources...')
 
             this.crudRepository.forEach(crud => {
-                let crudModelRelationships = this.getAllRelationshipsFromModel(crud.model),
-                    crudTableInputs = this.getInputsForTable(crud)
+                let crudTableInputs = this.getInputsForTable(crud),
+                    crudModelRelationships = this.getAllRelationshipsFromModel(crud.model),
+                    modelRelationshipsManager = this.getCrudModelRelationshipsManager(crud, crudModelRelationships)
 
                 options.data = {
                     crud,
                     crudTableInputs,
                     crudModelRelationships,
-                    crudHasTextInputs: this.crudHasTextInputs,
+                    modelRelationshipsManager,
                     getTypeForFilament: this.getTypeForFilament,
                     getTableType: input => this.getTableType(input),
-                    getRelationshipInputName: input => this.getRelationshipInputName(input)
+                    crudHasTextInputs: this.crudHasTextInputs(crud),
+                    getRelationshipInputName: input => this.getRelationshipInputName(input),
                 }
 
                 options.modules = [
@@ -159,6 +161,63 @@ module.exports = (vemto) => {
                 vemto.renderTemplate('files/pages/Edit.vemtl', `${basePath}/${crud.model.name}Resource/Pages/Edit${crud.model.name}.php`, options)
                 vemto.renderTemplate('files/pages/List.vemtl', `${basePath}/${crud.model.name}Resource/Pages/List${crud.model.plural}.php`, options)
                 vemto.renderTemplate('files/pages/Create.vemtl', `${basePath}/${crud.model.name}Resource/Pages/Create${crud.model.name}.php`, options)
+
+                if(!modelRelationshipsManager.length) return
+
+                this.renderRelationshipsManager(modelRelationshipsManager, crud, basePath)
+            })
+        },
+
+        renderRelationshipsManager(modelRelationshipsManager, crud, basePath) {
+            modelRelationshipsManager.forEach(rel => {
+                let relModelCrud = this.crudRepository.find(crudData => crudData.model.id === rel.model.id)
+
+                if(!relModelCrud) return
+
+                let crudTableInputs = this.getInputsForTable(relModelCrud)
+
+                let relationshipOptions = {
+                        formatAs: 'php',
+                        data: {
+                            crudTableInputs,
+                            crud: relModelCrud,
+                            inverseRelationshipModel: crud.model,
+                            getTypeForFilament: this.getTypeForFilament,
+                            relationshipType: rel.type.case('pascalCase'),
+                            getTableType: input => this.getTableType(input),
+                            crudHasTextInputs: this.crudHasTextInputs(relModelCrud),
+                            getRelationshipInputName: input => this.getRelationshipInputName(input),
+                        },
+                        modules: [
+                            { name: 'crud', id: relModelCrud.id },
+                            { name: 'crud-settings', id: relModelCrud.id }
+                        ]
+                    }
+
+                vemto.renderTemplate('files/ResourceManager.vemtl', 
+                    `${basePath}/${crud.model.name}Resource/RelationManagers/${rel.model.plural.case('pascalCase')}RelationManager.php`,
+                    relationshipOptions
+                )
+            })
+        },
+
+        getCrudModelRelationshipsManager(crud, crudModelRelationships) {
+            let crudPluginData = vemto.getPluginData().cruds,
+                relationshipsAllowedByFilament = ['morphMany', 'hasMany', 'belongsToMany']
+
+            return crudModelRelationships.filter(relationship => {
+                if(!relationshipsAllowedByFilament.includes(relationship.type)) {
+                    return false
+                }
+
+                if(crud.pluginConfig.isMasterDetail) {
+                    return true
+                }
+
+                let relationshipDataExists = crudPluginData[crud.id].relationships[relationship.id]
+
+                return this.crudRepository.some(crud => crud.model.id == relationship.model.id)
+                    && (relationshipDataExists && relationshipDataExists.selected)
             })
         },
 
