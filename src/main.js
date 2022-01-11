@@ -3,14 +3,20 @@ module.exports = (vemto) => {
     return {
         crudRepository: [],
 
-        canInstall() {
-            let appVersion = vemto.project.version,
-                compareOptions = {
-                    numeric: false,
-                    sensitivity: 'base'
-                }
+        beforeCodeGenerationStart() {
+            let phpVersionBuffer = vemto.executePhp('-r "echo PHP_VERSION;"'),
+                phpVersion = phpVersionBuffer.toString()
 
-            if(appVersion.localeCompare("1.0.0", undefined, compareOptions) < 0) {
+            if(phpVersion && phpVersion.localeCompare("8.0.0", undefined, { numeric: true }) < 0) {
+                vemto.log.error('[FILAMENT ERROR] You have a smaller PHP version than recommended to use the Filament v2 (>= 8.0)')
+                vemto.generator.abort()
+            }
+        },
+
+        canInstall() {
+            let appVersion = vemto.getProject().version
+
+            if(appVersion.localeCompare("1.0.4", undefined, { numeric: true }) < 0) {
                 vemto.addBlockReason('You have a smaller version than recommended to use the plugin')
                 return false
             }
@@ -128,34 +134,15 @@ module.exports = (vemto) => {
         },
 
         generateFilamentFiles() {
-            let basePath = 'app/Filament/Resources',
-                options = {
-                    formatAs: 'php',
-                    data: {}
-                }
+            let basePath = 'app/Filament/Resources'
                 
             vemto.log.message('Generating Filament Resources...')
 
             this.crudRepository.forEach(crud => {
-                let crudTableInputs = this.getInputsForTable(crud),
-                    crudModelRelationships = this.getAllRelationshipsFromModel(crud.model),
+                let crudModelRelationships = this.getAllRelationshipsFromModel(crud.model),
                     modelRelationshipsManager = this.getCrudModelRelationshipsManager(crud, crudModelRelationships)
 
-                options.data = {
-                    crud,
-                    crudTableInputs,
-                    crudModelRelationships,
-                    modelRelationshipsManager,
-                    getTypeForFilament: this.getTypeForFilament,
-                    getTableType: input => this.getTableType(input),
-                    crudHasTextInputs: this.crudHasTextInputs(crud),
-                    getRelationshipInputName: input => this.getRelationshipInputName(input),
-                }
-
-                options.modules = [
-                    { name: 'crud', id: crud.id },
-                    { name: 'crud-settings', id: crud.id }
-                ]
+                let options = this.getOptionsForRenderingResources(crud)
 
                 vemto.renderTemplate('files/FilamentResource.vemtl', `${basePath}/${crud.model.name}Resource.php`, options)
                 vemto.renderTemplate('files/pages/Edit.vemtl', `${basePath}/${crud.model.name}Resource/Pages/Edit${crud.model.name}.php`, options)
@@ -174,31 +161,45 @@ module.exports = (vemto) => {
 
                 if(!relModelCrud) return
 
-                let crudTableInputs = this.getInputsForTable(relModelCrud)
-
-                let relationshipOptions = {
-                        formatAs: 'php',
-                        data: {
-                            crudTableInputs,
-                            crud: relModelCrud,
-                            inverseRelationshipModel: crud.model,
-                            getTypeForFilament: this.getTypeForFilament,
-                            relationshipType: rel.type.case('pascalCase'),
-                            getTableType: input => this.getTableType(input),
-                            crudHasTextInputs: this.crudHasTextInputs(relModelCrud),
-                            getRelationshipInputName: input => this.getRelationshipInputName(input),
-                        },
-                        modules: [
-                            { name: 'crud', id: relModelCrud.id },
-                            { name: 'crud-settings', id: relModelCrud.id }
-                        ]
-                    }
+                let relationshipOptions = this.getOptionsForRenderingResources(relModelCrud, true, rel, crud.model)
 
                 vemto.renderTemplate('files/ResourceManager.vemtl', 
                     `${basePath}/${crud.model.name}Resource/RelationManagers/${rel.model.plural.case('pascalCase')}RelationManager.php`,
                     relationshipOptions
                 )
             })
+        },
+
+        getOptionsForRenderingResources(crud, isRelationManager = false, rel = {}, inverseRelationshipModel = {}) {
+            let options = {
+                formatAs: 'php',
+                data: {
+                    crud,
+                    getTypeForFilament: this.getTypeForFilament,
+                    getTableType: input => this.getTableType(input),
+                    crudHasTextInputs: this.crudHasTextInputs(crud),
+                    crudTableInputs: this.getInputsForTable(crud),
+                    getRelationshipInputName: input => this.getRelationshipInputName(input),
+                },
+                modules: [
+                    { name: 'crud', id: crud.id },
+                    { name: 'crud-settings', id: crud.id }
+                ]
+            }
+
+            if(isRelationManager) {
+                options.data.inverseRelationshipModel = inverseRelationshipModel
+                options.data.relationshipType = rel.type.case('pascalCase')
+
+                return options
+            }
+
+            let crudModelRelationships = this.getAllRelationshipsFromModel(crud.model)
+
+            options.data.crudModelRelationships = crudModelRelationships
+            options.data.modelRelationshipsManager = this.getCrudModelRelationshipsManager(crud, crudModelRelationships)
+
+            return options
         },
 
         getCrudModelRelationshipsManager(crud, crudModelRelationships) {
@@ -299,6 +300,12 @@ module.exports = (vemto) => {
             return [].concat(
                 basicRelationships, morphRelationships
             )
+        },
+
+        beforeRunnerEnd() {
+            let projectSettings = vemto.getProject()
+        
+            vemto.openLink(`${projectSettings.url}/admin`)
         },
     }
 }
