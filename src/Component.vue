@@ -8,12 +8,12 @@
 
             <div class="form-check mb-3">
                 <label class="inline-flex items-center" for="selectAllCruds">
-                    <input class="form-checkbox" type="checkbox" id="selectAllCruds" @change="selectAllData">
+                    <input class="form-checkbox" type="checkbox" id="selectAllCruds" @change="selectAllData" v-model="pluginData.allSelected">
                     <span class="ml-2 text-gray-800 dark:text-gray-300">Select All</span>
                 </label>
             </div>
             
-            <template v-if="!! pluginData.cruds">
+            <template v-if="pluginData.cruds">
                 <div class="bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-900 p-2 rounded-md my-3" v-for="crud in projectCruds" :key="'crud' + crud.id">
                     <div class="form-check">
                         <label class="inline-flex items-center text-gray-800" :for="crud.id">
@@ -159,7 +159,8 @@ export default {
 
         save: window.vemtoApi.debounce(function() {
             window.vemtoApi.savePluginData({
-                cruds: this.pluginData.cruds
+                cruds: this.pluginData.cruds,
+                allSelected: this.pluginData.allSelected
             })
         }, 300)
     }
