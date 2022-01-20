@@ -1,7 +1,7 @@
 <template>
     <div class="w-full">
-        <label class="block text-sm font-bold">Laravel Filament</label>
-        <small class="mb-2">Select the CRUDs to generate a Laravel Filament Resource</small>
+        <label class="block text-sm font-bold">Filament</label>
+        <small class="mb-2">Select the CRUDs to generate a Filament Resource</small>
         
         <div class="mt-5">
             <label class="block text-sm font-bold mb-2">Project CRUDs</label>

@@ -1,10 +1,10 @@
 {
     "version": "1.0.0",
-    "id": "app.vemto.laravel-filament",
-    "name": "laravel-filament",
-    "title": "Laravel Filament",
-    "description": "Laravel Filament Plugin",
+    "id": "app.vemto.filament",
+    "name": "filament",
+    "title": "Filament",
+    "description": "Filament Plugin",
     "image": "",
     "main": "src/main.js",
-    "vueComponent": "dist/laravel-filament.umd.min.js"
+    "vueComponent": "dist/filament.umd.min.js"
 }
