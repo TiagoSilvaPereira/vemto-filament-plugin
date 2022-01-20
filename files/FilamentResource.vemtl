@@ -64,7 +64,7 @@ class <$ crudModelName $>Resource extends Resource
                 Grid::make(['default' => 0])->schema([
                 <% if(this.crud.inputs.length && crudPluginData.inputs) { %>
                     <# Crud inputs #>
-                    <% for(let input of this.crud.inputs) { %>
+                    <% for(let input of this.crudPluginData.relationshipInputs) { %>
                         <###>
                         <% let inputNeedsOptions = input.isSelect() && !input.isForRelationship() %>
                         <###>

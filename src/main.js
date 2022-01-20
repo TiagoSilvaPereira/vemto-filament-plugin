@@ -165,7 +165,7 @@ module.exports = (vemto) => {
 
                 if(crudIsFromPluginConfig && relationshipIsNotSelected) return
 
-                let relModelCrud = rel.model.cruds[0],
+                let relModelCrud = rel.model.getMainCruds()[0],
                     crudModelExistsOnRepository = this.crudRepository.find(crud => crud.model.id === rel.model.id)
 
                 if(crudModelExistsOnRepository) return
@@ -256,6 +256,7 @@ module.exports = (vemto) => {
             if(isRelationManager) {
                 options.data.relationshipType = rel.type.case('pascalCase')
                 options.data.inverseRelationshipModel = inverseRelationshipModel
+                options.data.relationshipInputs = crud.inputs.filter(input => input.relationshipId != rel.id)
 
                 return options
             }
