@@ -7,7 +7,7 @@ module.exports = (vemto) => {
             let phpVersionBuffer = vemto.executePhp('-r "echo PHP_VERSION;"'),
                 phpVersion = phpVersionBuffer.toString()
 
-            if(phpVersion && phpVersion.localeCompare("8.0.0", undefined, { numeric: true }) < 0) {
+            if(vemto.versionIsSmallerThan(phpVersion, '8.0.0')) {
                 vemto.log.error('[FILAMENT ERROR] You have a smaller PHP version than recommended to use the Filament v2 (>= 8.0)')
                 vemto.generator.abort()
             }
@@ -42,17 +42,17 @@ module.exports = (vemto) => {
             let crudsData = []
 
                 cruds.forEach(crud => {
-                let crudData = { 'selected': true, 'id': crud.id, 'inputs': true, 'relationships': [] },
-                    crudRelationships = this.getAllRelationshipsFromModel(crud.model)
+                    let crudData = { 'selected': true, 'id': crud.id, 'inputs': true, 'relationships': [] },
+                        crudRelationships = this.getAllRelationshipsFromModel(crud.model)
 
-                if(crudRelationships.length) {
-                    crudRelationships.forEach(rel => {
-                        crudData.relationships[rel.id] = { 'selected': true }
-                    })
-                }
+                    if(crudRelationships.length) {
+                        crudRelationships.forEach(rel => {
+                            crudData.relationships[rel.id] = { 'selected': true }
+                        })
+                    }
 
-                crudsData[crud.id] = crudData
-            })
+                    crudsData[crud.id] = crudData
+                })
             
             return crudsData.map(crud => crud)
         },
