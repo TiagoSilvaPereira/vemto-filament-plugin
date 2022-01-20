@@ -322,10 +322,11 @@ module.exports = (vemto) => {
             let textInputs = this.getTextInputs(crud),
                 booleanInputs = crud.getCheckboxInputs(),
                 belongsToInputs = crud.getBelongsToInputs(),
-                dateAndDatetimeInputs = crud.getDateAndDatetimeInputs()
+                dateAndDatetimeInputs = crud.getDateAndDatetimeInputs(),
+                imageInputs = crud.getImageInputs()
 
             return [].concat(
-                textInputs, booleanInputs, belongsToInputs, dateAndDatetimeInputs
+                textInputs, booleanInputs, belongsToInputs, dateAndDatetimeInputs, imageInputs
             )
         },
 
