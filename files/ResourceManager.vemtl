@@ -58,7 +58,7 @@ class <$ this.crud.model.plural.case('pascalCase') $>RelationManager extends <$ 
                 Grid::make(['default' => 0])->schema([
                 <% if(this.crud.inputs.length && crudPluginData.inputs) { %>
                     <# Crud inputs #>
-                    <% for(let input of crudPluginData.relationshipInputs) { %>
+                    <% for(let input of this.relationshipInputs) { %>
                         <###>
                         <% let inputNeedsOptions = input.isSelect() && !input.isForRelationship() %>
                         <###>

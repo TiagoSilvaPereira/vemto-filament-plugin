@@ -256,7 +256,14 @@ module.exports = (vemto) => {
             if(isRelationManager) {
                 options.data.relationshipType = rel.type.case('pascalCase')
                 options.data.inverseRelationshipModel = inverseRelationshipModel
-                options.data.relationshipInputs = crud.inputs.filter(input => input.relationshipId != rel.id)
+                
+                options.data.relationshipInputs = crud.inputs
+                
+                if(rel.foreignKey) {
+                    options.data.relationshipInputs = crud.inputs.filter(input => {
+                        return input.field.id != rel.foreignKey.id
+                    })
+                }
 
                 return options
             }
