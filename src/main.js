@@ -8,7 +8,7 @@ module.exports = (vemto) => {
                 phpVersion = phpVersionBuffer.toString()
 
             if(vemto.versionIsSmallerThan(phpVersion, '8.0.0')) {
-                vemto.log.error('[FILAMENT ERROR] You have a smaller PHP version than recommended to use the Filament v2 (>= 8.0)')
+                vemto.log.error('[FILAMENT ERROR] You have a smaller PHP version than required to use the Filament v2 (>= 8.0)')
                 vemto.generator.abort()
             }
         },
@@ -22,7 +22,7 @@ module.exports = (vemto) => {
                 hasCrudForGeneration = pluginData.cruds.find(crud => crud && crud.selected)
 
             if(!hasCrudForGeneration) {
-                vemto.log.warning('No have a selected CRUD for generate a Filament Resource.')
+                vemto.log.warning('There is no selected CRUD for generating Filament Resources.')
                 return []
             }
 
