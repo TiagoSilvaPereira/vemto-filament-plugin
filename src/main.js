@@ -3,16 +3,6 @@ module.exports = (vemto) => {
     return {
         crudRepository: [],
 
-        beforeCodeGenerationEnd() {
-            let phpVersionBuffer = vemto.executePhp('-r "echo PHP_VERSION;"'),
-                phpVersion = phpVersionBuffer.toString()
-
-            if(vemto.versionIsSmallerThan(phpVersion, '8.0.0')) {
-                vemto.log.error('[FILAMENT ERROR] You have a smaller PHP version than required to use the Filament v2 (>= 8.0)')
-                vemto.generator.abort()
-            }
-        },
-
         canInstall() {
             return true
         },
@@ -72,6 +62,14 @@ module.exports = (vemto) => {
         },
 
         beforeCodeGenerationEnd() {
+            let phpVersionBuffer = vemto.executePhp('-r "echo PHP_VERSION;"'),
+                phpVersion = phpVersionBuffer.toString()
+
+            if(vemto.versionIsSmallerThan(phpVersion, '8.0.0')) {
+                vemto.log.error('[FILAMENT ERROR] You have a smaller PHP version than required to use the Filament v2 (>= 8.0)')
+                vemto.generator.abort()
+            }
+            
             if(!this.projectHasFilamentInstalled()) {
                 vemto.log.message('Installing the Laravel Filament package...')
                 vemto.executeComposer('update')
