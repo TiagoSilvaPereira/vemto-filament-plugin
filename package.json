@@ -6,5 +6,6 @@
     "description": "Filament Plugin",
     "image": "",
     "main": "src/main.js",
-    "vueComponent": "dist/filament.umd.min.js"
+    "vueComponent": "dist/filament.umd.min.js",
+    "minVemtoVersion": "1.0.5"
 }
