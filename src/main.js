@@ -3,7 +3,7 @@ module.exports = (vemto) => {
     return {
         crudRepository: [],
 
-        beforeCodeGenerationStart() {
+        beforeCodeGenerationEnd() {
             let phpVersionBuffer = vemto.executePhp('-r "echo PHP_VERSION;"'),
                 phpVersion = phpVersionBuffer.toString()
 
