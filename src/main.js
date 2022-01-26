@@ -346,7 +346,7 @@ module.exports = (vemto) => {
         },
 
         getTypeForFilament(input) {
-            let textInputs = ['email', 'url', 'password', 'text']
+            let textInputs = ['email', 'url', 'password', 'text', 'number']
 
             if(textInputs.includes(input.type)) {
                 return 'TextInput'
