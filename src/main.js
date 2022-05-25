@@ -309,12 +309,6 @@ module.exports = (vemto) => {
         },
 
         getTableType(input) {
-            let textInputs = ['email', 'text', 'date', 'datetime']
-
-            if(textInputs.includes(input.type) || input.isForRelationship()) {
-                return 'TextColumn'
-            }
-
             if(input.isImage()) {
                 return 'ImageColumn'
             }
@@ -322,6 +316,8 @@ module.exports = (vemto) => {
             if(input.isCheckbox()) {
                 return 'BooleanColumn'
             }
+
+            return 'TextColumn'
         },
 
         getInputsForTable(crud) {
