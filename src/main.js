@@ -259,7 +259,7 @@ module.exports = (vemto) => {
                 
                 if(rel.foreignKey) {
                     options.data.relationshipInputs = crud.inputs.filter(input => {
-                        return input.field.id != rel.foreignKey.id
+                        return input.field && (input.field.id != rel.foreignKey.id)
                     })
                 }
 
@@ -321,28 +321,13 @@ module.exports = (vemto) => {
         },
 
         getInputsForTable(crud) {
-            let textInputs = this.getTextInputs(crud),
-                booleanInputs = crud.getCheckboxInputs(),
-                belongsToInputs = crud.getBelongsToInputs(),
-                dateAndDatetimeInputs = crud.getDateAndDatetimeInputs(),
-                imageInputs = crud.getImageInputs()
+            let textInputs = crud.inputs.filter(input => !input.isFile() && !input.isHidden() && input.onIndex)
 
-            return [].concat(
-                textInputs, booleanInputs, belongsToInputs, dateAndDatetimeInputs, imageInputs
-            )
-        },
-
-        getTextInputs(crud) {
-            let textInputs = crud.getTextInputs(),
-                emailInputs = crud.getEmailInputs()
-
-            return [].concat(
-                textInputs, emailInputs
-            )
+            return textInputs
         },
 
         getTypeForFilament(input) {
-            let textInputs = ['email', 'url', 'password', 'text']
+            let textInputs = ['email', 'url', 'password', 'text', 'number']
 
             if(textInputs.includes(input.type)) {
                 return 'TextInput'
@@ -366,7 +351,7 @@ module.exports = (vemto) => {
         },
 
         crudHasTextInputs(crud){
-            return crud.hasTextInputs() || crud.hasEmailInputs() || crud.hasUrlInputs() || crud.hasPasswordInputs()
+            return crud.hasTextInputs() || crud.hasEmailInputs() || crud.hasUrlInputs() || crud.hasPasswordInputs() || crud.hasNumericInputs()
         },
 
         getAllRelationshipsFromModel(model) {

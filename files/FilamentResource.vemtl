@@ -85,6 +85,7 @@ class <$ crudModelName $>Resource extends Resource
                         <###>
                         <% if(input.isPassword()) { %>
                         ->password()
+                        ->dehydrateStateUsing(fn ($state) => \Hash::make($state))
                         <% } %>
                         <###>
                         <% if(input.isUrl()) { %>
@@ -134,7 +135,7 @@ class <$ crudModelName $>Resource extends Resource
                     <% for(let inputTable of this.crudTableInputs) { %>
                         <###>
                         <% let inputTableName = inputTable.isForRelationship() ? this.getRelationshipInputName(inputTable) : inputTable.name %>
-                        <% let inputTableNeedsLimit = inputTable.isText() || inputTable.isForRelationship() || inputTable.isEmail() %>
+                        <% let inputTableNeedsLimit = inputTable.isText() || inputTable.isForRelationship() || inputTable.isEmail() || inputTable.isTextarea() || inputTable.isUrl() %>
                         <###>
                         Tables\Columns\<$ this.getTableType(inputTable) $>::make('<$ inputTableName $>')
                         <###>
@@ -148,6 +149,14 @@ class <$ crudModelName $>Resource extends Resource
                         <###>
                         <% if(inputTable.isImage()) { %>
                             ->rounded()
+                        <% } %>
+                        <###>
+                        <% if(inputTable.isSelect() && !inputTable.isForRelationship()) { %>
+                            ->enum([
+                                <% for(let item of inputTable.items) { %>
+                                    '<$ item.value $>' => '<$ item.label $>',
+                                <% } %>
+                            ])
                         <% } %>
                         <###>
                         <% if(inputTableNeedsLimit) { %>

@@ -79,6 +79,7 @@ class <$ this.crud.model.plural.case('pascalCase') $>RelationManager extends <$ 
                         <###>
                         <% if(input.isPassword()) { %>
                         ->password()
+                        ->dehydrateStateUsing(fn ($state) => \Hash::make($state))
                         <% } %>
                         <###>
                         <% if(input.isUrl()) { %>
@@ -128,7 +129,7 @@ class <$ this.crud.model.plural.case('pascalCase') $>RelationManager extends <$ 
                     <% for(let inputTable of this.crudTableInputs) { %>
                         <###>
                         <% let inputTableName = inputTable.isForRelationship() ? this.getRelationshipInputName(inputTable) : inputTable.name %>
-                        <% let inputTableNeedsLimit = inputTable.isText() || inputTable.isForRelationship() || inputTable.isEmail() %>
+                        <% let inputTableNeedsLimit = inputTable.isText() || inputTable.isForRelationship() || inputTable.isEmail() || inputTable.isTextarea() || inputTable.isUrl() %>
                         <###>
                         Tables\Columns\<$ this.getTableType(inputTable) $>::make('<$ inputTableName $>')
                         <###>
@@ -142,6 +143,14 @@ class <$ this.crud.model.plural.case('pascalCase') $>RelationManager extends <$ 
                         <###>
                         <% if(inputTable.isImage()) { %>
                             ->rounded()
+                        <% } %>
+                        <###>
+                        <% if(inputTable.isSelect() && !inputTable.isForRelationship()) { %>
+                            ->enum([
+                                <% for(let item of inputTable.items) { %>
+                                    '<$ item.value $>' => '<$ item.label $>',
+                                <% } %>
+                            ])
                         <% } %>
                         <###>
                         <% if(inputTableNeedsLimit) { %>
