@@ -181,7 +181,7 @@ class <$ this.crud.model.plural.case('pascalCase') $>RelationManager extends <$ 
                         <% let inputRelModel = belongsToInput.relationship.model %>
                         <###>
                         <% if(belongsToInput.isForRelationship()) { %>
-                        MultiSelectFilter::make('<$ belongsToInput.name $>')->relationship('<$ inputRelModel.name.case('camelCase') $>', '<$ inputRelModel.getLabelFieldName() $>'),
+                        MultiSelectFilter::make('<$ belongsToInput.name $>')->relationship('<$ belongsToInput.relationship.name.case('camelCase') $>', '<$ inputRelModel.getLabelFieldName() $>'),
                         <% } %>
 
                     <% } %>

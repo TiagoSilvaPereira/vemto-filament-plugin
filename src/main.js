@@ -305,7 +305,7 @@ module.exports = (vemto) => {
             let relModel = input.relationship.model,
                 relModelLabel = relModel.getLabelFieldName()
 
-            return `${relModel.name.case('camelCase')}.${relModelLabel}`
+            return `${input.relationship.name.case('camelCase')}.${relModelLabel}`
         },
 
         getTableType(input) {
