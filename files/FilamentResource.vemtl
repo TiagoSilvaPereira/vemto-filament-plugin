@@ -18,6 +18,9 @@ use App\Filament\Resources\<$ crudModelName $>Resource\Pages;
 <% if(this.crudHasTextInputs) { %>
 use Filament\Forms\Components\TextInput;
 <% } %>
+<% if(this.crud.hasJsonInputs()) { %>
+use Filament\Forms\Components\KeyValue;
+<% } %>
 <% if(this.crud.hasSelectInputs()) { %>
 use Filament\Forms\Components\Select;
 <% } %>
@@ -33,6 +36,9 @@ use Filament\Forms\Components\Toggle;
 <% if(this.crud.hasFileOrImageInputs()) { %>
 use Filament\Forms\Components\FileUpload;
 <% } %>
+<% if(this.crud.hasColorInputs()) { %>
+use Filament\Forms\Components\ColorPicker;
+<% } %>
 <% if(this.crud.hasTextareaInputs()) { %>
 use Filament\Forms\Components\RichEditor;
 <% } %>
@@ -44,6 +50,13 @@ use Filament\Tables\Filters\MultiSelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 <% } %>
 use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Card;
+<% if(this.crud.model.hasUniqueFields()) { %>
+use Illuminate\Database\Eloquent\Model;
+<% } %>
+<% if(this.crud.hasPasswordInputs()) { %>
+use Livewire\Component;
+<% } %>
 
 class <$ crudModelName $>Resource extends Resource
 {
@@ -61,69 +74,92 @@ class <$ crudModelName $>Resource extends Resource
     {
         return $form
             ->schema([
-                Grid::make(['default' => 0])->schema([
-                <% if(this.crud.inputs.length && crudPluginData.inputs) { %>
-                    <# Crud inputs #>
-                    <% for(let input of this.crud.inputs) { %>
-                        <###>
-                        <% let inputNeedsOptions = input.isSelect() && !input.isForRelationship() %>
-                        <###>
-                        <$ this.getTypeForFilament(input) $>::make('<$ input.name $>')
-                        ->rules(<$ input.convertValidationToArrayForTemplate(input.validation) $>)
-                        <###>
-                        <% if(input.isNumeric()) { %>
-                        ->numeric()
-                        <% } %>
-                        <###>
-                        <% if(input.isForRelationship()) { %>
-                        ->relationship('<$ input.relationship.name $>', '<$ input.relationship.model.getLabelFieldName() $>')
-                        <% } %>
-                        <###>
-                        <% if(input.isEmail()) { %>
-                        ->email()
-                        <% } %>
-                        <###>
-                        <% if(input.isPassword()) { %>
-                        ->password()
-                        ->dehydrateStateUsing(fn ($state) => \Hash::make($state))
-                        <% } %>
-                        <###>
-                        <% if(input.isUrl()) { %>
-                        ->url()
-                        <% } %>
-                        <###>
-                        <% if(input.isImage()) { %>
-                        ->image()
-                        <% } %>
-                        <###>
-                        <% if(input.isSelect()) { %>
-                        ->searchable()
-                        <% } %>
-                        <###>
-                        <% if(inputNeedsOptions) { %>
-                        ->options([
-                            <% for(let item of input.items) { %>
-                                '<$ item.value $>' => '<$ item.label $>',
-                            <% } %>
-                        ])
-                        <% } %>
-                        <###>
-                        <% if(input.placeholder && !input.isCheckbox()) { %>
-                        ->placeholder('<$ input.placeholder $>')
-                        <% } %>
-                        <###>
-                        <% if(input.defaultValue) { %>
-                        ->default('<$ input.defaultValue $>')
-                        <% } %>
-                        ->columnSpan([
-                            'default' => <$ input.cols $>,
-                            'md' => <$ input.colsMedium $>,
-                            'lg' => <$ input.colsLarge $>
-                        ]),
+                Card::make()
+                    ->schema([
+                        Grid::make(['default' => 0])->schema([
+                        <% if(this.crud.inputs.length && crudPluginData.inputs) { %>
+                            <# Crud inputs #>
+                            <% for(let input of this.crud.inputs) { %>
+                                <###>
+                                <% let inputNeedsOptions = input.isSelect() && !input.isForRelationship() %>
+                                <###>
+                                <$ this.getTypeForFilament(input) $>::make('<$ input.name $>')
+                                <% if(!input.isJson() && !input.isPassword()) { %>
+                                ->rules(<$ this.getValidationFromInput(input) $>)
+                                <% } %>
+                                <###>
+                                <% if(input.field.isUnique()) { %>
+                                ->unique('<$ input.field.entity.table $>', '<$ input.field.name $>', fn (?Model $record) => $record)
+                                <% } %>
+                                <###>
+                                <% if(input.isNumeric()) { %>
+                                ->numeric()
+                                <% } %>
+                                <###>
+                                <% if(input.isForRelationship()) { %>
+                                ->relationship('<$ input.relationship.name $>', '<$ input.relationship.model.getLabelFieldName() $>')
+                                <% } %>
+                                <###>
+                                <% if(input.isEmail()) { %>
+                                ->email()
+                                <% } %>
+                                <###>
+                                <% if(input.isPassword()) { %>
+                                ->password()
+                                ->dehydrateStateUsing(fn ($state) => \Hash::make($state))
+                                <% if(input.isRequiredOnCreate() || input.isRequiredOnUpdate()) { %>
+                                ->required(
+                                    <% if(!input.isRequiredOnUpdate()) { %>
+                                        fn (Component $livewire) => $livewire instanceof Pages\Create<$ this.crud.model.name $>
+                                    <% } %>
+                                    <% if(!input.isRequiredOnCreate()) { %>
+                                        fn (Component $livewire) => $livewire instanceof Pages\Edit<$ this.crud.model.name $>
+                                    <% } %>
+                                )
+                                <% } %>
+                                <% } %>
+                                <###>
+                                <% if(input.isUrl()) { %>
+                                ->url()
+                                <% } %>
+                                <###>
+                                <% if(input.isImage()) { %>
+                                ->image()
+                                <% } %>
+                                <###>
+                                <% if(input.isSelect()) { %>
+                                ->searchable()
+                                <% } %>
+                                <###>
+                                <% if(input.isJson() && !input.field.nullable) { %>
+                                ->required()
+                                <% } %>
+                                <###>
+                                <% if(inputNeedsOptions) { %>
+                                ->options([
+                                    <% for(let item of input.items) { %>
+                                        '<$ item.value $>' => '<$ item.label $>',
+                                    <% } %>
+                                ])
+                                <% } %>
+                                <###>
+                                <% if(input.placeholder && !input.isCheckbox() && !input.isJson()) { %>
+                                ->placeholder('<$ input.placeholder $>')
+                                <% } %>
+                                <###>
+                                <% if(input.defaultValue) { %>
+                                ->default('<$ input.defaultValue $>')
+                                <% } %>
+                                ->columnSpan([
+                                    'default' => <$ input.cols $>,
+                                    'md' => <$ input.colsMedium $>,
+                                    'lg' => <$ input.colsLarge $>
+                                ]),
 
-                    <% } %>
-                <% } %>
-                ])
+                            <% } %>
+                        <% } %>
+                        ])
+                    ])
             ]);
     }
 

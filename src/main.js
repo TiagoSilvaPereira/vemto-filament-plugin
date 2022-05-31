@@ -62,8 +62,11 @@ module.exports = (vemto) => {
         },
 
         beforeCodeGenerationEnd() {
-            let phpVersionBuffer = vemto.executePhp('-r "echo PHP_VERSION;"'),
-                phpVersion = phpVersionBuffer.toString()
+            let phpVersionBuffer = vemto.executePhp('-r "echo PHP_VERSION;"')
+
+            if(!phpVersionBuffer) return
+            
+            let phpVersion = phpVersionBuffer.toString()
 
             if(vemto.versionIsSmallerThan(phpVersion, '8.0.0')) {
                 vemto.log.error('[FILAMENT ERROR] You have a smaller PHP version than required to use the Filament v2 (>= 8.0)')
@@ -244,6 +247,7 @@ module.exports = (vemto) => {
                     crudHasTextInputs: this.crudHasTextInputs(crud),
                     getTableType: input => this.getTableType(input),
                     getRelationshipInputName: input => this.getRelationshipInputName(input),
+                    getValidationFromInput: this.getValidationFromInput
                 },
                 modules: [
                     { name: 'crud', id: crud.id },
@@ -309,6 +313,10 @@ module.exports = (vemto) => {
         },
 
         getTableType(input) {
+            if(input.isForRelationship()) {
+                return 'TextColumn'
+            }
+
             if(input.isImage()) {
                 return 'ImageColumn'
             }
@@ -321,7 +329,7 @@ module.exports = (vemto) => {
         },
 
         getInputsForTable(crud) {
-            let textInputs = crud.inputs.filter(input => !input.isFile() && !input.isHidden() && input.onIndex)
+            let textInputs = crud.inputs.filter(input => !input.isFile() && !input.isJson() && !input.isHidden() && input.onIndex)
 
             return textInputs
         },
@@ -337,6 +345,8 @@ module.exports = (vemto) => {
                 return 'BelongsToSelect'
             }
 
+            if(input.isJson()) return 'KeyValue';
+
             if(input.isDate()) return 'DatePicker'
     
             if(input.isCheckbox()) return 'Toggle'
@@ -346,6 +356,8 @@ module.exports = (vemto) => {
             if(input.isFileOrImage()) return 'FileUpload'
 
             if(input.isDatetime()) return 'DateTimePicker'
+
+            if(input.isColor()) return 'ColorPicker'
 
             return input.type.case('pascalCase')
         },
@@ -368,5 +380,15 @@ module.exports = (vemto) => {
         
             vemto.openLink(`${projectSettings.url}/admin`)
         },
+
+        getValidationFromInput(input) {
+            let inputValidation = input.convertValidationToArrayForTemplate(input.validation),
+                tableName = input.field.entity.table,
+                fieldName = input.field.name
+
+            let regex = new RegExp(`'unique:${tableName},${fieldName}',?`)
+
+            return inputValidation.replace(regex, '')
+        }
     }
 }
