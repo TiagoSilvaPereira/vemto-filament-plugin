@@ -62,11 +62,8 @@ module.exports = (vemto) => {
         },
 
         beforeCodeGenerationEnd() {
-            let phpVersionBuffer = vemto.executePhp('-r "echo PHP_VERSION;"')
-
-            if(!phpVersionBuffer) return
-            
-            let phpVersion = phpVersionBuffer.toString()
+            let phpVersionBuffer = vemto.executePhp('-r "echo PHP_VERSION;"'),
+                phpVersion = phpVersionBuffer.toString()
 
             if(vemto.versionIsSmallerThan(phpVersion, '8.0.0')) {
                 vemto.log.error('[FILAMENT ERROR] You have a smaller PHP version than required to use the Filament v2 (>= 8.0)')
