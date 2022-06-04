@@ -244,6 +244,7 @@ module.exports = (vemto) => {
                     crudHasTextInputs: this.crudHasTextInputs(crud),
                     getTableType: input => this.getTableType(input),
                     getRelationshipInputName: input => this.getRelationshipInputName(input),
+                    getValidationFromInput: this.getValidationFromInput
                 },
                 modules: [
                     { name: 'crud', id: crud.id },
@@ -305,13 +306,11 @@ module.exports = (vemto) => {
             let relModel = input.relationship.model,
                 relModelLabel = relModel.getLabelFieldName()
 
-            return `${relModel.name.case('camelCase')}.${relModelLabel}`
+            return `${input.relationship.name.case('camelCase')}.${relModelLabel}`
         },
 
         getTableType(input) {
-            let textInputs = ['email', 'text', 'date', 'datetime', 'number', 'select', 'url', 'password', 'textarea']
-
-            if(textInputs.includes(input.type) || input.isForRelationship()) {
+            if(input.isForRelationship()) {
                 return 'TextColumn'
             }
 
@@ -322,10 +321,12 @@ module.exports = (vemto) => {
             if(input.isCheckbox()) {
                 return 'BooleanColumn'
             }
+
+            return 'TextColumn'
         },
 
         getInputsForTable(crud) {
-            let textInputs = crud.inputs.filter(input => !input.isFile() && !input.isHidden() && input.onIndex)
+            let textInputs = crud.inputs.filter(input => !input.isFile() && !input.isJson() && !input.isHidden() && input.onIndex)
 
             return textInputs
         },
@@ -341,6 +342,8 @@ module.exports = (vemto) => {
                 return 'BelongsToSelect'
             }
 
+            if(input.isJson()) return 'KeyValue';
+
             if(input.isDate()) return 'DatePicker'
     
             if(input.isCheckbox()) return 'Toggle'
@@ -350,6 +353,8 @@ module.exports = (vemto) => {
             if(input.isFileOrImage()) return 'FileUpload'
 
             if(input.isDatetime()) return 'DateTimePicker'
+
+            if(input.isColor()) return 'ColorPicker'
 
             return input.type.case('pascalCase')
         },
@@ -372,5 +377,15 @@ module.exports = (vemto) => {
         
             vemto.openLink(`${projectSettings.url}/admin`)
         },
+
+        getValidationFromInput(input) {
+            let inputValidation = input.convertValidationToArrayForTemplate(input.validation),
+                tableName = input.field.entity.table,
+                fieldName = input.field.name
+
+            let regex = new RegExp(`'unique:${tableName},${fieldName}',?`)
+
+            return inputValidation.replace(regex, '')
+        }
     }
 }
