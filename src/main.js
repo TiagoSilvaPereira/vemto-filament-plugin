@@ -339,7 +339,7 @@ module.exports = (vemto) => {
             }
 
             if(input.isCheckbox()) {
-                return 'BooleanColumn'
+                return 'IconColumn'
             }
 
             return 'TextColumn'

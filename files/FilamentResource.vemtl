@@ -43,7 +43,7 @@ use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\RichEditor;
 <% } %>
 <% if(this.crud.hasBelongsToInputs()) { %>
-use Filament\Tables\Filters\MultiSelectFilter;
+use Filament\Tables\Filters\SelectFilter;
 <% } %>
 <% if(this.crud.model.hasTimestampFields()) { %>
 use App\Filament\Filters\DateRangeFilter;
@@ -194,7 +194,11 @@ class <$ crudModelName $>Resource extends Resource
                         <% } %>
                         <###>
                         <% if(inputTable.isImage()) { %>
-                            ->rounded()
+                            ->circular()
+                        <% } %>
+                        <###>
+                        <% if(inputTable.isCheckbox()) { %>
+                            ->boolean()
                         <% } %>
                         <###>
                         <% if(inputTable.isSelect() && !inputTable.isForRelationship()) { %>
@@ -224,8 +228,9 @@ class <$ crudModelName $>Resource extends Resource
                         <% let inputRelModel = belongsToInput.relationship.model %>
                         <###>
                         <% if(belongsToInput.isForRelationship()) { %>
-                        MultiSelectFilter::make('<$ belongsToInput.name $>')->relationship('<$ belongsToInput.relationship.name $>', '<$ inputRelModel.getLabelFieldName() $>')
+                        SelectFilter::make('<$ belongsToInput.name $>')->relationship('<$ belongsToInput.relationship.name $>', '<$ inputRelModel.getLabelFieldName() $>')
                             ->indicator('<$ inputRelModel.name.case('pascalCase') $>')
+                            ->multiple()
                             ->label('<$ inputRelModel.name.case('pascalCase') $>'),
                         <% } %>
 
