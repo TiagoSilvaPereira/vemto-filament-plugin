@@ -10,7 +10,7 @@ use Filament\Tables;
 use Filament\Resources\{
     Form, Table
 };
-use Filament\Resources\RelationManagers\<$ this.relationshipType $>RelationManager;
+use Filament\Resources\RelationManagers\RelationManager;
 <% if(this.crudHasTextInputs) { %>
 use Filament\Forms\Components\TextInput;
 <% } %>
@@ -54,7 +54,7 @@ use Livewire\Component;
 use App\Filament\Resources\<$ this.inverseRelationshipModel.name $>Resource\Pages;
 <% } %>
 
-class <$ this.crud.model.plural.case('pascalCase') $>RelationManager extends <$ this.relationshipType $>RelationManager
+class <$ this.crud.model.plural.case('pascalCase') $>RelationManager extends RelationManager
 {
     protected static string $relationship = '<$ this.crud.model.plural.case('camelCase') $>';
 
@@ -219,6 +219,16 @@ class <$ this.crud.model.plural.case('pascalCase') $>RelationManager extends <$ 
 
                     <% } %>
                 <% } %>
+            ])
+            ->headerActions([
+                Tables\Actions\CreateAction::make(),
+            ])
+            ->actions([
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\DeleteBulkAction::make(),
             ]);
     }
 }

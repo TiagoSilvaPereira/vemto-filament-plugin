@@ -5,13 +5,10 @@
 
 namespace App\Filament\Resources\<$ crudModelName $>Resource\Pages;
 
-use Filament\Resources\Pages\ListRecords;
-use App\Filament\Traits\HasDescendingOrder;
+use Filament\Resources\Pages\ViewRecord;
 use App\Filament\Resources\<$ crudModelName $>Resource;
 
-class List<$ this.crud.model.plural $> extends ListRecords
+class View<$ crudModelName $> extends ViewRecord
 {
-    use HasDescendingOrder;
-
     protected static string $resource = <$ crudModelName $>Resource::class;
 }
