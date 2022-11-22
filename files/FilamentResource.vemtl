@@ -21,7 +21,7 @@ use Filament\Forms\Components\TextInput;
 <% if(this.crud.hasJsonInputs()) { %>
 use Filament\Forms\Components\KeyValue;
 <% } %>
-<% if(this.crud.hasSelectInputs()) { %>
+<% if(this.crud.hasSelectInputs() || this.crud.hasBelongsToInputs()) { %>
 use Filament\Forms\Components\Select;
 <% } %>
 <% if(this.crud.hasDatetimeInputs()) { %>
@@ -43,11 +43,10 @@ use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\RichEditor;
 <% } %>
 <% if(this.crud.hasBelongsToInputs()) { %>
-use Filament\Forms\Components\BelongsToSelect;
-use Filament\Tables\Filters\MultiSelectFilter;
+use Filament\Tables\Filters\SelectFilter;
 <% } %>
 <% if(this.crud.model.hasTimestampFields()) { %>
-use Illuminate\Database\Eloquent\Builder;
+use App\Filament\Filters\DateRangeFilter;
 <% } %>
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Card;
@@ -86,6 +85,12 @@ class <$ crudModelName $>Resource extends Resource
                                 <$ this.getTypeForFilament(input) $>::make('<$ input.name $>')
                                 <% if(!input.isJson() && !input.isPassword()) { %>
                                 ->rules(<$ this.getValidationFromInput(input) $>)
+                                <% } %>
+                                <###>
+                                <% if(input.field.nullable) { %>
+                                ->nullable() 
+                                <% } else { %>
+                                ->required()
                                 <% } %>
                                 <###>
                                 <% if(input.field.isUnique()) { %>
@@ -166,6 +171,7 @@ class <$ crudModelName $>Resource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->poll('60s')
             ->columns([
                 <% if(this.crudTableInputs.length) { %>
                     <% for(let inputTable of this.crudTableInputs) { %>
@@ -174,6 +180,10 @@ class <$ crudModelName $>Resource extends Resource
                         <% let inputTableNeedsLimit = inputTable.isText() || inputTable.isForRelationship() || inputTable.isEmail() || inputTable.isTextarea() || inputTable.isUrl() %>
                         <###>
                         Tables\Columns\<$ this.getTableType(inputTable) $>::make('<$ inputTableName $>')
+                        ->toggleable()
+                        <% if(this.inputCanBeSearchable(inputTable)) { %>
+                        ->searchable(<$ this.inputCanBeSearchableIndividually(inputTable) ? 'true, null, true' : '' $>)
+                        <% } %>
                         <###>
                         <% if(inputTable.isDatetime()) { %>
                             ->dateTime()
@@ -184,7 +194,11 @@ class <$ crudModelName $>Resource extends Resource
                         <% } %>
                         <###>
                         <% if(inputTable.isImage()) { %>
-                            ->rounded()
+                            ->circular()
+                        <% } %>
+                        <###>
+                        <% if(inputTable.isCheckbox()) { %>
+                            ->boolean()
                         <% } %>
                         <###>
                         <% if(inputTable.isSelect() && !inputTable.isForRelationship()) { %>
@@ -204,16 +218,7 @@ class <$ crudModelName $>Resource extends Resource
             ->filters([
                 <% if(this.crud.model.hasTimestampFields()) { %>
                     <###>
-                    Tables\Filters\Filter::make('created_at')
-                        ->form([
-                            Forms\Components\DatePicker::make('created_from'),
-                            Forms\Components\DatePicker::make('created_until'),
-                        ])
-                        ->query(function (Builder $query, array $data): Builder {
-                            return $query
-                                ->when($data['created_from'], fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date))
-                                ->when($data['created_until'], fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date));
-                        }),
+                    DateRangeFilter::make('created_at'),
 
                 <% } %>
                 <% if(this.crud.hasBelongsToInputs()) { %>
@@ -223,7 +228,10 @@ class <$ crudModelName $>Resource extends Resource
                         <% let inputRelModel = belongsToInput.relationship.model %>
                         <###>
                         <% if(belongsToInput.isForRelationship()) { %>
-                        MultiSelectFilter::make('<$ belongsToInput.name $>')->relationship('<$ belongsToInput.relationship.name $>', '<$ inputRelModel.getLabelFieldName() $>'),
+                        SelectFilter::make('<$ belongsToInput.name $>')->relationship('<$ belongsToInput.relationship.name $>', '<$ inputRelModel.getLabelFieldName() $>')
+                            ->indicator('<$ inputRelModel.name.case('pascalCase') $>')
+                            ->multiple()
+                            ->label('<$ inputRelModel.name.case('pascalCase') $>'),
                         <% } %>
 
                     <% } %>
@@ -247,6 +255,7 @@ class <$ crudModelName $>Resource extends Resource
         return [
             'index' => Pages\List<$ this.crud.model.plural $>::route('/'),
             'create' => Pages\Create<$ crudModelName $>::route('/create'),
+            'view' => Pages\View<$ crudModelName $>::route('/{record}'),
             'edit' => Pages\Edit<$ crudModelName $>::route('/{record}/edit'),
         ];
     }

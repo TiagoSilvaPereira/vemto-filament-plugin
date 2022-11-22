@@ -198,25 +198,44 @@ module.exports = (vemto) => {
         },
 
         generateFilamentFiles() {
-            let basePath = 'app/Filament/Resources'
+            let basePath = 'app/Filament'
                 
             vemto.log.message('Generating Filament Resources...')
 
+            vemto.renderTemplate('files/traits/HasDescendingOrder.vemtl', `${basePath}/Traits/HasDescendingOrder.php`, {})
+            
             this.crudRepository.forEach(crud => {
                 let crudModelRelationships = this.getAllRelationshipsFromModel(crud.model),
                     modelRelationshipsManager = this.getCrudModelRelationshipsManager(crud, crudModelRelationships)
 
                 let options = this.getOptionsForFilamentResource(crud)
 
-                vemto.renderTemplate('files/FilamentResource.vemtl', `${basePath}/${crud.model.name}Resource.php`, options)
-                vemto.renderTemplate('files/pages/Edit.vemtl', `${basePath}/${crud.model.name}Resource/Pages/Edit${crud.model.name}.php`, options)
-                vemto.renderTemplate('files/pages/List.vemtl', `${basePath}/${crud.model.name}Resource/Pages/List${crud.model.plural}.php`, options)
-                vemto.renderTemplate('files/pages/Create.vemtl', `${basePath}/${crud.model.name}Resource/Pages/Create${crud.model.name}.php`, options)
+                vemto.renderTemplate('files/FilamentResource.vemtl', `${basePath}/Resources/${crud.model.name}Resource.php`, options)
+                vemto.renderTemplate('files/pages/Edit.vemtl', `${basePath}/Resources/${crud.model.name}Resource/Pages/Edit${crud.model.name}.php`, options)
+                vemto.renderTemplate('files/pages/View.vemtl', `${basePath}/Resources/${crud.model.name}Resource/Pages/View${crud.model.name}.php`, options)
+                vemto.renderTemplate('files/pages/List.vemtl', `${basePath}/Resources/${crud.model.name}Resource/Pages/List${crud.model.plural}.php`, options)
+                vemto.renderTemplate('files/pages/Create.vemtl', `${basePath}/Resources/${crud.model.name}Resource/Pages/Create${crud.model.name}.php`, options)
+                
+                this.generateFilters(crud)
 
                 if(!modelRelationshipsManager.length) return
 
                 this.generateRelationshipsManager(modelRelationshipsManager, crud, basePath)
             })
+        },
+
+        generateFilters(crud) {
+            if(!crud || !crud.model) return
+            
+            let basePath = 'app/Filament/Filters',
+                filters = ['DateRange']
+
+            filters.forEach(filter => {
+                if(filter == 'DateRange' && crud.model.hasTimestampFields()) {
+                    vemto.renderTemplate(`files/filters/${filter}.vemtl`, `${basePath}/${filter}Filter.php`, {})
+                }
+            })
+
         },
 
         generateRelationshipsManager(modelRelationshipsManager, crud, basePath) {
@@ -228,7 +247,7 @@ module.exports = (vemto) => {
                 let relationshipOptions = this.getOptionsForFilamentResource(relModelCrud, true, rel, crud.model)
 
                 vemto.renderTemplate('files/ResourceManager.vemtl', 
-                    `${basePath}/${crud.model.name}Resource/RelationManagers/${rel.model.plural.case('pascalCase')}RelationManager.php`,
+                    `${basePath}/Resources/${crud.model.name}Resource/RelationManagers/${rel.model.plural.case('pascalCase')}RelationManager.php`,
                     relationshipOptions
                 )
             })
@@ -243,8 +262,10 @@ module.exports = (vemto) => {
                     crudTableInputs: this.getInputsForTable(crud),
                     crudHasTextInputs: this.crudHasTextInputs(crud),
                     getTableType: input => this.getTableType(input),
+                    inputCanBeSearchable: input => this.inputCanBeSearchable(input),
+                    getValidationFromInput: input => this.getValidationFromInput(input),
                     getRelationshipInputName: input => this.getRelationshipInputName(input),
-                    getValidationFromInput: this.getValidationFromInput
+                    inputCanBeSearchableIndividually: input => this.inputCanBeSearchableIndividually(input),
                 },
                 modules: [
                     { name: 'crud', id: crud.id },
@@ -253,7 +274,6 @@ module.exports = (vemto) => {
             }
 
             if(isRelationManager) {
-                options.data.relationshipType = rel.type.case('pascalCase')
                 options.data.inverseRelationshipModel = inverseRelationshipModel
                 
                 options.data.relationshipInputs = crud.inputs
@@ -319,7 +339,7 @@ module.exports = (vemto) => {
             }
 
             if(input.isCheckbox()) {
-                return 'BooleanColumn'
+                return 'IconColumn'
             }
 
             return 'TextColumn'
@@ -339,7 +359,7 @@ module.exports = (vemto) => {
             }
     
             if(input.isForRelationship()) {
-                return 'BelongsToSelect'
+                return 'Select'
             }
 
             if(input.isJson()) return 'KeyValue';
@@ -383,9 +403,27 @@ module.exports = (vemto) => {
                 tableName = input.field.entity.table,
                 fieldName = input.field.name
 
-            let regex = new RegExp(`'unique:${tableName},${fieldName}',?`)
+            let excludedValidations = [
+                `'unique:${tableName},${fieldName}',?`,
+                "'required',?",
+                "'nullable',?"
+            ]
 
-            return inputValidation.replace(regex, '')
+            excludedValidations.forEach(regex => {
+                let regexObj = new RegExp(regex, 'g')
+
+                inputValidation = inputValidation.replace(regexObj, '')
+            })
+
+            return inputValidation
+        },
+
+        inputCanBeSearchable(input) {
+            return !input.isDateOrDatetime() && !input.isPassword() && !input.isJson() && !input.isCheckbox() && !input.isForRelationship() && !input.isFileOrImage()
+        },
+
+        inputCanBeSearchableIndividually(input) {
+            return input.isText() || input.isEmail() || input.isUrl() || input.isNumeric()
         }
     }
 }
