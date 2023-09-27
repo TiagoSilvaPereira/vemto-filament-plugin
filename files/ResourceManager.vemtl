@@ -5,11 +5,9 @@
 
 namespace App\Filament\Resources\<$ this.inverseRelationshipModel.name $>Resource\RelationManagers;
 
-use Filament\Forms;
 use Filament\Tables;
-use Filament\Resources\{
-    Form, Table
-};
+use Filament\Tables\Table;
+use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 <% if(this.crudHasTextInputs) { %>
 use Filament\Forms\Components\TextInput;
@@ -40,7 +38,7 @@ use Filament\Forms\Components\RichEditor;
 <% } %>
 <% if(this.crud.hasBelongsToInputs()) { %>
 use Filament\Forms\Components\BelongsToSelect;
-use Filament\Tables\Filters\MultiSelectFilter;
+use Filament\Tables\Filters\SelectFilter;
 <% } %>
 <% if(this.crud.model.hasTimestampFields()) { %>
 use Illuminate\Database\Eloquent\Builder;
@@ -64,7 +62,7 @@ class <$ this.crud.model.plural.case('pascalCase') $>RelationManager extends Rel
     protected static bool $shouldRegisterNavigation = false;
     <% } %>
 
-    public static function form(Form $form): Form
+    public function form(Form $form): Form
     {
         return $form
             ->schema([
@@ -214,7 +212,7 @@ class <$ this.crud.model.plural.case('pascalCase') $>RelationManager extends Rel
                         <% let inputRelModel = belongsToInput.relationship.model %>
                         <###>
                         <% if(belongsToInput.isForRelationship()) { %>
-                        MultiSelectFilter::make('<$ belongsToInput.name $>')->relationship('<$ belongsToInput.relationship.name.case('camelCase') $>', '<$ inputRelModel.getLabelFieldName() $>'),
+                        SelectFilter::make('<$ belongsToInput.name $>')->multiple()->relationship('<$ belongsToInput.relationship.name.case('camelCase') $>', '<$ inputRelModel.getLabelFieldName() $>'),
                         <% } %>
 
                     <% } %>
