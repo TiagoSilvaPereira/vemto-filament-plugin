@@ -222,6 +222,8 @@ module.exports = (vemto) => {
 
                 this.generateRelationshipsManager(modelRelationshipsManager, crud, basePath)
             })
+
+            vemto.renderTemplate('files/AdminPanelProvider.vemtl', 'app/Providers/Filament/AdminPanelProvider.php', {})
         },
 
         generateFilters(crud) {
