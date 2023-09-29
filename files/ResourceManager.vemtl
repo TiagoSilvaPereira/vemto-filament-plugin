@@ -6,6 +6,7 @@
 namespace App\Filament\Resources\<$ this.inverseRelationshipModel.name $>Resource\RelationManagers;
 
 use Filament\Tables;
+use Filament\Forms;
 use Filament\Tables\Table;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -152,7 +153,7 @@ class <$ this.crud.model.plural.case('pascalCase') $>RelationManager extends Rel
             ]);
     }
 
-    public static function table(Table $table): Table
+    public function table(Table $table): Table
     {
         return $table
             ->columns([
