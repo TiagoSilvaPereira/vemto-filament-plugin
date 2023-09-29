@@ -52,7 +52,7 @@ module.exports = (vemto) => {
                 return packages
             }
             
-            packages.require['filament/filament'] = '^2.0'
+            packages.require['filament/filament'] = '^3.0-stable'
 
             return packages
         },
