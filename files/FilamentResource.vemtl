@@ -9,6 +9,7 @@ namespace App\Filament\Resources;
 
 use <$ modelsNamespace $>\<$ crudModelName $>;
 use Filament\Tables;
+use Filament\Forms;
 use Filament\Tables\Table;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
