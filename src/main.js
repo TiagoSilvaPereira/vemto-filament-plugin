@@ -52,7 +52,7 @@ module.exports = (vemto) => {
                 return packages
             }
             
-            packages.require['filament/filament'] = '^2.0'
+            packages.require['filament/filament'] = '^3.0-stable'
 
             return packages
         },
@@ -222,6 +222,8 @@ module.exports = (vemto) => {
 
                 this.generateRelationshipsManager(modelRelationshipsManager, crud, basePath)
             })
+
+            vemto.renderTemplate('files/AdminPanelProvider.vemtl', 'app/Providers/Filament/AdminPanelProvider.php', {})
         },
 
         generateFilters(crud) {
