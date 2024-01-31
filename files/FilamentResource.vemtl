@@ -8,12 +8,11 @@
 namespace App\Filament\Resources;
 
 use <$ modelsNamespace $>\<$ crudModelName $>;
-use Filament\{
-    Tables, Forms
-};
-use Filament\Resources\{
-    Form, Table, Resource
-};
+use Filament\Tables;
+use Filament\Forms;
+use Filament\Tables\Table;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
 use App\Filament\Resources\<$ crudModelName $>Resource\Pages;
 <% if(this.crudHasTextInputs) { %>
 use Filament\Forms\Components\TextInput;
@@ -49,7 +48,7 @@ use Filament\Tables\Filters\SelectFilter;
 use App\Filament\Filters\DateRangeFilter;
 <% } %>
 use Filament\Forms\Components\Grid;
-use Filament\Forms\Components\Card;
+use Filament\Forms\Components\Section;
 <% if(this.crud.model.hasUniqueFields()) { %>
 use Illuminate\Database\Eloquent\Model;
 <% } %>
@@ -73,7 +72,7 @@ class <$ crudModelName $>Resource extends Resource
     {
         return $form
             ->schema([
-                Card::make()
+                Section::make()
                     ->schema([
                         Grid::make(['default' => 0])->schema([
                         <% if(this.crud.inputs.length && crudPluginData.inputs) { %>
