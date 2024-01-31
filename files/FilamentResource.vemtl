@@ -60,7 +60,7 @@ class <$ crudModelName $>Resource extends Resource
 {
     protected static ?string $model = <$ crudModelName $>::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-collection';
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static ?string $recordTitleAttribute = '<$ this.crud.model.getLabelFieldName() $>';
 
@@ -87,7 +87,7 @@ class <$ crudModelName $>Resource extends Resource
                                 <% } %>
                                 <###>
                                 <% if(input.field.nullable) { %>
-                                ->nullable() 
+                                ->nullable()
                                 <% } else { %>
                                 ->required()
                                 <% } %>
