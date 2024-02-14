@@ -52,7 +52,7 @@ module.exports = (vemto) => {
                 return packages
             }
             
-            packages.require['filament/filament'] = '^2.0'
+            packages.require['filament/filament'] = '^3.2'
 
             return packages
         },
@@ -203,6 +203,7 @@ module.exports = (vemto) => {
             vemto.log.message('Generating Filament Resources...')
 
             vemto.renderTemplate('files/traits/HasDescendingOrder.vemtl', `${basePath}/Traits/HasDescendingOrder.php`, {})
+            vemto.renderTemplate('files/AdminPanelProvider.vemtl', 'app/Providers/Filament/AdminPanelProvider.php', {})
             
             this.crudRepository.forEach(crud => {
                 let crudModelRelationships = this.getAllRelationshipsFromModel(crud.model),

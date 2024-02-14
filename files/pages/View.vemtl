@@ -5,10 +5,18 @@
 
 namespace App\Filament\Resources\<$ crudModelName $>Resource\Pages;
 
+use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 use App\Filament\Resources\<$ crudModelName $>Resource;
 
 class View<$ crudModelName $> extends ViewRecord
 {
     protected static string $resource = <$ crudModelName $>Resource::class;
+
+    public function getHeaderActions() : array
+    {
+        return [
+            EditAction::make(),
+        ];
+    }
 }

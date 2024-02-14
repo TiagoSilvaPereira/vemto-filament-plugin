@@ -2,12 +2,14 @@
 
 namespace App\Models\Traits;
 
+use Filament\Panel;
+
 trait FilamentTrait
 {
     /*
      * Returns whether the user is allowed to access Filament
      */
-    public function canAccessFilament(): bool
+    public function canAccessPanel(Panel $panel): bool
     {
         return $this->isSuperAdmin();
     }
