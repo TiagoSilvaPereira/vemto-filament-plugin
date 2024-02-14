@@ -4,6 +4,10 @@
 
 This plugin aims to bring the generation of complete [Filament Admin Panels](https://filamentadmin.com/) to your Vemto Laravel project.
 
+## Filament v3 support
+
+Filament v3 support was added to version 1.0.5
+
 ## Requirements
 
 This plugin installs [Filament](https://filamentadmin.com/), and makes the initial configuration. If you already have Filament installed in the project, the plugin will skip the configuration step and generate the [resources](https://filamentadmin.com/docs/2.x/admin/resources).
